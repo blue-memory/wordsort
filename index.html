@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>读取txt文件并排序（不含排除项）</title>
+    <link rel="shortcut icon" href="http://liujianwei695.gitee.io/minifile/images/1.jpg">
+    <style>
+        #delCons {
+            margin-bottom: 30px;
+        }
+        
+        #delCons p {
+            text-align: center;
+            height: 30px;
+            line-height: 30px;
+            color: #f40;
+            padding: 0;
+            margin: 0;
+            border: 1px dashed #ddd;
+        }
+        
+        #delCons p:first-child {
+            background-color: #dff;
+        }
+        
+        .missionTable {
+            width: 1200px;
+            font-size: 13px;
+            margin: 0 auto;
+            border: 0.3px solid #B9B9B9;
+            border-bottom: none;
+        }
+        
+        .missionTable,
+        thead,
+        th,
+        tr,
+        td {
+            text-align: center;
+            border-collapse: collapse;
+        }
+        
+        .missionTable thead {
+            border-radius: 6px 6px 0px 0px;
+            border-bottom: 1px solid #D5D5D5;
+        }
+        
+        .missionTable th {
+            height: 49px;
+            line-height: 49px;
+            font-size: 14px;
+            font-family: PingFang SC;
+            color: #222222;
+            background: #FCFDFD;
+        }
+        
+        tbody tr {
+            background: #FFFFFF;
+            border-bottom: 0.4px solid rgba(151, 151, 151, 0.4);
+        }
+        
+        tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.01);
+        }
+        
+        .missionTable td {
+            height: 39px;
+            font-size: 14px;
+            font-family: PingFang SC;
+            color: #666666;
+        }
+        
+        tr>td:nth-child(1),
+        tr>td:nth-child(2) {
+            border-right: 1px solid #cdcdcd;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="delCons"></div>
+    <table cellpadding="0" style="table-layout:fixed;" id="missionTable" class="missionTable">
+        <thead>
+            <th style="width:9.2%;font-weight: normal;">排序</th>
+            <th style="width:12.5%;font-weight: normal;">词汇</th>
+            <th style="width:11.4%;font-weight: normal;">出现频率</th>
+        </thead>
+        <tbody id="missionTables">
+            <tr></tr>
+        </tbody>
+    </table>
+    <script>
+        var xmlhttp;
+
+        function loadData(url, cfunc) {
+            if (window.XMLHttpRequest) {
+                // code for IE7+, Firefox, Chrome, Opera, Safari
+                xmlhttp = new XMLHttpRequest();
+            } else {
+                // code for IE6, IE5
+                xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            xmlhttp.onreadystatechange = cfunc;
+            xmlhttp.open("GET", url, true);
+            xmlhttp.send();
+        };
+
+        // 正则所有单词
+        function FindWord(article) {
+            return article.match(/\b\w+\b/g);
+        }
+
+        let delWord = ["the", "a", "of"]
+            // 读取文件
+        function readFile(url) {
+            loadData(url, function() {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    let readText = xmlhttp.responseText;
+                    // 拆分
+                    let textArr = FindWord(readText);
+                    let handleObj = new Object();
+                    let delText = "";
+                    let handleArr = Array(0);
+                    // 去重
+                    for (let index = 0; index < textArr.length; index++) {
+                        let textKey = textArr[index];
+                        let textValue = handleObj[textKey];
+                        if (textValue >= 1) {
+                            handleObj[textKey] = textValue += 1;
+                        } else {
+                            handleObj[textKey] = 1;
+                        }
+                    }
+
+                    // 去掉排除项
+                    delWord.forEach(element => {
+                        handleObj[element] = 0
+                        delText += "<p>" + element + "</p>"
+                    });
+                    document.getElementById("delCons").innerHTML = ("<p>排除项：</p>" + delText);
+
+                    // 转格式
+                    for (const key in handleObj) {
+                        if (Object.hasOwnProperty.call(handleObj, key)) {
+                            const element = handleObj[key];
+                            let itemArr = Array(0);
+                            itemArr = [key, element]
+                            handleArr.push(itemArr)
+                        }
+                    }
+
+                    // 排序
+                    let newArr = handleArr.sort((a, b) => {
+                        return b[1] - a[1];
+                    })
+
+                    let htmlStr = ''
+                    newArr.forEach((ele, index) => {
+                        htmlStr += "<tr><td>" + (index + 1) + "</td><td>" + ele[0] + "</td><td>" + ele[1] + "</td></tr>"
+                    });
+                    document.getElementById("missionTables").innerHTML = htmlStr;
+                    console.log(newArr);
+                } else {
+                    return '';
+                }
+            })
+        };
+
+        readFile("Little_Prince.txt");
+    </script>
+
+</body>
+
+</html>
